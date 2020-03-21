@@ -1,13 +1,10 @@
 class Name:
 
-    def __init__(self, first, middle, last):
-        self.title = ""
-        self.first = first.upper()
-        self.middle = middle.upper()
-        self.last = last.upper()
-        self.suffix = ""
-
     def __init__(self, full):
+        self.title = ""
+        self.suffix = ""
+        if("/" in full):
+            full = full.split("/")[0]
         if(full[0:3].lower()) == "dr.":
             self.title = "Dr."
             full = full[3:]
@@ -27,3 +24,10 @@ class Name:
 
     def __str__(self):
         return self.first + (" " if len(self.middle) > 0 else "") + self.middle + " " + self.last
+
+    def toDict(self):
+        return {"title": self.title,
+                "first": self.first,
+                "middle": self.middle,
+                "last": self.last,
+                "suffix": self.suffix}

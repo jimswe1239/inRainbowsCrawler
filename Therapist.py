@@ -23,9 +23,8 @@ class Therapist:
         self.payBy = []
         self.insurance = []
 
-
     def setID(self):
-        self.generatedID = hash(self.name+self.phone)
+        self.generatedID = hash(str(self.name))
 
     def __str__(self):  # for testing
         ret = ""

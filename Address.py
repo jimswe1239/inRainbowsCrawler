@@ -21,3 +21,6 @@ class Address:
 
     def __str__(self):
         return self.street+"\n" + self.unit + ("\n" if len(self.unit) > 0 else "") + self.city + ", " + self.state + " " + self.zipcode
+
+    def toDict(self):
+        return {"street": self.street, "unit": self.unit, "city": self.city, "state": self.state, "zipcode": self.zipcode}

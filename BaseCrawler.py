@@ -6,22 +6,30 @@ import time
 from Therapist import Therapist
 from Name import Name
 from Address import Address
+import firebase_admin
+from firebase_admin import firestore
+from firebase_admin import credentials
+
+# get this file from the firebase site project settings
+cred = credentials.Certificate("creds/inrainbows-171a7-firebase-adminsdk-9htrh-c0a0a9f490.json")
+
+firebase_admin.initialize_app(cred, {
+  'projectId': "inrainbows-171a7",
+})
+
+db = firestore.client()
+
 
 # user agent headers for requests
 headers = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36"}
 
-# write headers for csv file
-# writeheader()
-
-# verify if we have already seen record
-setOfNames = {}
 
 
-def crawl(url):
+def crawl(url, setOfNames):
     therapistsRemaining = True
     pnum = 1
-    goal = 3
-    while(therapistsRemaining and pnum <= goal):
+
+    while(therapistsRemaining):
         print("PAGE", pnum)
         time.sleep(3 + random.random())
         r = requests.get(url, headers=headers)
@@ -34,23 +42,37 @@ def crawl(url):
             # time.sleep(5)
             name = extractName(div)
             print("  Name:", name)
-            if name not in setOfNames:
-                print("    scraping new data")
-                url = extractUrl(div)
-                time.sleep(3 + random.random())
-                r = requests.get(url, headers=headers)
-                pageSoup = BeautifulSoup(r.text, 'html.parser')
+            if str(name) not in setOfNames:
 
-                therapist = extractData(pageSoup)
+                doc_ref = db.collection('therapists').document(str(name))
+                doc = doc_ref.get()
+
+                if not doc.exists:
+                    print("    scraping new data")
+                    url = extractUrl(div)
+                    time.sleep(3 + random.random())
+                    r = requests.get(url, headers=headers)
+                    pageSoup = BeautifulSoup(r.text, 'html.parser')
+
+                    therapist = extractData(pageSoup)
+                    writeToDB(therapist, doc_ref)
+                else:
+                    print("    name already found")
+
+                fNames = open('names.txt', 'a')
+                fNames.write(str(name)+"\n")
+                fNames.close()
+                setOfNames.add(str(name))
             else:
-                print("    name already found")
+                print("name in SET")
 
         btnNexts = searchSoup.findAll("a", {"class": "btn-next"})
         if(len(btnNexts) == 0):
             therapistsRemaining = False
         else:
             url = btnNexts[0]['href']
-            pnum = 2
+            pnum += 1
+
 
     print("ending crawl")
 
@@ -276,9 +298,44 @@ def extractData(soup):
     except(AttributeError):
         pass
 
-    print(therapist)
     return therapist
 
 
+def writeToDB(therapist, doc_ref):
+    doc_ref.set({
+        'name': therapist.name.toDict(),
+        'phone': therapist.phone,
+        'email': therapist.email,
+        'website': therapist.website,
+        'titles': therapist.titles,
+        'blurb': therapist.blurb,
+        'address': therapist.address.toDict(),
+        'specialties': therapist.specialties,
+        'issues': therapist.issues,
+        'mentalHealth': therapist.mentalHealth,
+        'sexuality': therapist.sexuality,
+        'ages': therapist.ages,
+        'communities': therapist.communities,
+        'types': therapist.types,
+        'modality': therapist.modality,
+        'video': therapist.video,
+        'qualifications': therapist.qualifications,
+        'finances': therapist.finances,
+        'payBy': therapist.payBy,
+        'insurance': therapist.insurance
+    })
+
 # make calls to crawl(urlString)
-crawl("https://www.psychologytoday.com/us/therapists/lesbian/ma/boston?sid=5e763cc7a0a78")
+
+listOfUrls = [
+
+]
+
+for x in listOfUrls:
+    setOfNames = set()
+
+    with open('names.txt') as f:
+        read_data = f.read()
+        for row in read_data.split("\n"):
+            setOfNames.add(row)
+    crawl(x, setOfNames)
