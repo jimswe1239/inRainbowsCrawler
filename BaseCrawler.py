@@ -7,7 +7,6 @@ from Therapist import Therapist
 from Name import Name
 from Address import Address
 
-
 # user agent headers for requests
 headers = {"User-agent":"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.80 Safari/537.36"}
 
@@ -236,7 +235,7 @@ def extractData(soup):
         lst = soup.find("div", {"class": "profile-qualifications"})
         lst = lst.findAll("li")
         for x in lst:
-            key = x.find("strong").text.strip()
+            key = x.text.split(":")[0].strip()
             val = x.text.split(":")[-1].strip()
             therapist.qualifications[key] = val
     except(AttributeError):
@@ -244,11 +243,36 @@ def extractData(soup):
 
     try:
         lst = soup.find("div", {"class": "profile-finances"})
-        lst = lst.findAll("li")
+        lst = lst.find("ul").findAll("li")
         for x in lst:
-            key = x.find("strong").text.strip()
+            key = x.text.split(":")[0].strip()
             val = x.text.split(":")[-1].strip()
             therapist.finances[key] = val
+    except(AttributeError):
+        pass
+
+    try:
+        insurance = []
+        lst = soup.find("div", {"class": "attributes-insurance"})
+        lst = lst.findAll("li")
+        for x in lst:
+            txt = x.text.strip()
+            insurance += [txt]
+        therapist.insurance = insurance
+    except(AttributeError):
+        pass
+
+    try:
+        payBy = []
+        lst = soup.find("div", {"class": "attributes-payment-method"})
+        lst = lst.findAll("span")
+        for x in lst:
+            txt = x.text.strip()
+            if txt[0] == ",":
+                txt = txt[2:]
+            if txt != "Pay By:":
+                payBy += [txt]
+        therapist.payBy = payBy
     except(AttributeError):
         pass
 
@@ -256,5 +280,5 @@ def extractData(soup):
     return therapist
 
 
-# make calls to crawl
-# crawl(URL GOES HERE)
+# make calls to crawl(urlString)
+crawl("https://www.psychologytoday.com/us/therapists/lesbian/ma/boston?sid=5e763cc7a0a78")

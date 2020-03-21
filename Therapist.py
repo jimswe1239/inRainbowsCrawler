@@ -20,6 +20,8 @@ class Therapist:
         self.video = []
         self.qualifications = dict()
         self.finances = dict()
+        self.payBy = []
+        self.insurance = []
 
 
     def setID(self):
@@ -56,6 +58,10 @@ class Therapist:
             ret = ret + "  Video: " + str(x) + "\n"
         ret = ret + "Qualifications: " + str(self.qualifications) + "\n"
         ret = ret + "Finances: " + str(self.finances) + "\n"
+        for x in self.payBy:
+            ret = ret + "  Pay By: " + str(x) + "\n"
+        for x in self.insurance:
+            ret = ret + "  Insurance: " + str(x) + "\n"
 
         return ret
 
